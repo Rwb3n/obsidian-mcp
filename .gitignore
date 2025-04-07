@@ -53,6 +53,3 @@ test_delete_client.py
 
 # AI Assistant Configuration/State
 .aiconfig/
-
-# AI Assistant Configuration/State
-.aiconfig/ 
