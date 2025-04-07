@@ -13,6 +13,7 @@ env.bak/
 venv.bak/
 
 # Build Artifacts
+docs/
 build/
 dist/
 *.egg-info/
