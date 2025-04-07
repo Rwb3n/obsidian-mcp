@@ -93,48 +93,49 @@ The server will start and print the address it's listening on (e.g., `http://127
 
 Many MCP clients (like Claude Desktop) can launch server processes directly. To configure such a client, you typically need to edit its JSON configuration file (e.g., `claude_desktop_config.json` on macOS/Linux, find the equivalent path on Windows under `AppData`).
 
-You need to provide the command to run the Python interpreter *from the virtual environment* and the path to the server's `main.py` script.
+⚠️ **Important JSON Formatting Rules:**
+1. JSON files **do not** support comments (remove any `//` or `/* */` comments)
+2. All strings must be properly quoted with double quotes (`"`)
+3. Windows paths must use escaped backslashes (`\\`)
+4. Use a JSON validator (like [jsonlint.com](https://jsonlint.com/)) to check your syntax
 
 Here's an example entry to add under the `mcpServers` key in the client's JSON configuration:
 
 ```json
 {
   "mcpServers": {
-    // ... other potential servers ...
-
-    "obsidian_vault": { // Choose a descriptive name
-      "command": "/path/to/your/project/OMCP/.venv/bin/python", // Linux/macOS Example
-      // OR
-      // "command": "C:\\path\\to\\your\\project\\OMCP\\.venv\\Scripts\\python.exe", // Windows Example (Note escaped backslashes)
-      
-      "args": [
-        "/path/to/your/project/OMCP/obsidian_mcp_server/main.py" // Linux/macOS Example
-        // OR
-        // "args": ["C:\\path\\to\\your\\project\\OMCP\\obsidian_mcp_server\\main.py"] // Windows Example
-      ],
-      
-      // Optional but RECOMMENDED: Pass vault path via environment
-      "env": { 
-        "OMCP_VAULT_PATH": "/path/to/your/Obsidian/Vault" // Linux/macOS Example
-        // OR
-        // "OMCP_VAULT_PATH": "C:/path/to/your/Obsidian/Vault" // Windows Example (Forward slashes often work better in env vars)
-        
-        // Add other OMCP_* variables from your .env file if needed/desired
-        // "OMCP_DAILY_NOTE_LOCATION": "Journal/Daily"
+    "obsidian_vault": {
+      "command": "C:\\path\\to\\your\\project\\OMCP\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\path\\to\\your\\project\\OMCP\\obsidian_mcp_server\\main.py"],
+      "env": {
+        "OMCP_VAULT_PATH": "C:/path/to/your/Obsidian/Vault",
+        "OMCP_DAILY_NOTE_LOCATION": "Journal/Daily"
       }
     }
-
   }
 }
 ```
 
 **Key Points:**
 
-*   Replace `/path/to/your/project/OMCP/` and `/path/to/your/Obsidian/Vault` with the **absolute paths** relevant to your system.
-*   The `command` path **must** point to the `python` (or `python.exe`) executable *inside* the `.venv` you created for this project.
-*   The `args` path **must** point to the `main.py` file within the `obsidian_mcp_server` subfolder.
-*   Using the `env` block is the most reliable way to ensure the server finds your vault path when launched by the client.
-*   Remember to **restart the client application** (e.g., Claude Desktop) after modifying its JSON configuration.
+*   Replace the paths with the **absolute paths** relevant to your system
+*   For Windows paths in the `command` and `args` fields:
+    *   Use double backslashes (`\\`) for path separators
+    *   Include the `.exe` extension for the Python executable
+*   For Windows paths in the `env` block:
+    *   Use forward slashes (`/`) for better compatibility
+    *   Do not include the `.exe` extension
+*   The `command` path **must** point to the `python.exe` executable *inside* the `.venv` you created
+*   The `args` path **must** point to the `main.py` file within the `obsidian_mcp_server` subfolder
+*   Using the `env` block is the most reliable way to ensure the server finds your vault path
+*   Remember to **restart the client application** after modifying its JSON configuration
+
+**Common Pitfalls to Avoid:**
+1. Don't use single backslashes in Windows paths
+2. Don't include comments in the JSON
+3. Don't forget to escape backslashes in Windows paths
+4. Don't mix forward and backslashes in the same path
+5. Don't forget to properly quote all strings
 
 ## Available MCP Tools
 
@@ -177,6 +178,7 @@ This project is actively developed. Here's a look at planned features:
 *   Variable substitution in templates (e.g., `{{DATE}}`).
 *   `list_templates` tool.
 *   Advanced note update tools (e.g., `append_to_note_by_metadata`).
+*   `list_vault_structure` tool for comprehensive vault hierarchy view.
 *   Comprehensive testing review and expansion.
 
 **v2.x+ (Potential Ideas / Longer Term)**
@@ -191,7 +193,149 @@ This project is actively developed. Here's a look at planned features:
 *   **Querying Tools:**
     *   `get_local_graph(path)` (Combine outgoing/backlinks).
     *   `search_notes_by_metadata_field(key, value)`.
+*   **Plugin Integration Tools:**
+    *   **Dataview Integration:**
+        *   `execute_dataview_query(query_type, query)` - Run Dataview queries and get structured results
+        *   `search_by_dataview_field(field, value)` - Search notes by Dataview fields
+    *   **Task Management:**
+        *   `query_tasks(status, due_date, tags)` - Search and filter tasks across vault
+    *   **Kanban Integration:**
+        *   `get_kanban_data(board_path)` - Get structured kanban board data
+    *   **Calendar Integration:**
+        *   `get_calendar_events(start_date, end_date)` - Query calendar events and tasks
+
+## Frequently Asked Questions (FAQ)
+
+### Configuration Issues
+
+**Q: Why isn't my `.env.example` file being pushed to GitHub?**
+A: This is likely due to the `.gitignore` file. While we have rules to allow `.env.example`, sometimes git can be overly aggressive. Try these steps:
+1. Check if the file is being ignored: `git check-ignore -v .env.example`
+2. If it is, try forcing the add: `git add -f .env.example`
+3. If that doesn't work, verify your `.gitignore` has these lines:
+   ```gitignore
+   .env
+   *.env
+   .env.*
+   !.env.example  # Explicitly allow .env.example
+   ```
+
+**Q: My server can't find my vault. What's wrong?**
+A: This is usually due to incorrect path configuration. Check:
+1. The `OMCP_VAULT_PATH` in your `.env` file uses forward slashes (`/`) even on Windows
+2. The path is absolute (starts from root)
+3. The path doesn't end with a trailing slash
+4. The vault directory exists and is accessible
+
+**Q: Why am I getting permission errors?**
+A: This typically happens when:
+1. The vault path points to a restricted directory
+2. The Python process doesn't have read/write permissions
+3. The vault is in a cloud-synced folder (like OneDrive) that's currently syncing
+
+Try:
+1. Moving your vault to a local directory
+2. Running the server with elevated permissions
+3. Checking your antivirus isn't blocking access
+
+### Client Connection Issues
+
+**Q: My AI client can't connect to the server. What should I check?**
+A: Verify these common issues:
+1. The server is actually running (check terminal output)
+2. The port in your client config matches the server's port
+3. The Python path in your client config points to the correct virtual environment
+4. All environment variables are properly set in the client config
+
+**Q: Why do I get "Connection refused" errors?**
+A: This usually means:
+1. The server isn't running
+2. The port is already in use
+3. Firewall is blocking the connection
+
+Try:
+1. Check if the server is running: `netstat -ano | findstr :8001` (Windows)
+2. Try a different port by setting `OMCP_SERVER_PORT` in your `.env`
+3. Temporarily disable firewall to test
+
+**Q: I get "[error] [obsidian_vault] Unexpected token 'S', "Starting O"... is not valid JSON". What's wrong?**
+A: This error occurs when the client's JSON configuration file is malformed. Common causes:
+1. Missing or extra commas in the JSON
+2. Unescaped backslashes in Windows paths
+3. Comments in the JSON (JSON doesn't support comments)
+
+Check your client config file (e.g., `claude_desktop_config.json`):
+1. Use a JSON validator (like [jsonlint.com](https://jsonlint.com/)) to check syntax
+2. For Windows paths, escape backslashes: `"C:\\path\\to\\file"`
+3. Remove any comments (// or /* */)
+4. Ensure all strings are properly quoted
+5. Check that all brackets and braces are properly closed
+
+Example of correct Windows path formatting:
+```json
+{
+  "mcpServers": {
+    "obsidian_vault": {
+      "command": "C:\\path\\to\\your\\project\\OMCP\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\path\\to\\your\\project\\OMCP\\obsidian_mcp_server\\main.py"]
+    }
+  }
+}
+```
+
+### Note Operations
+
+**Q: Why can't I create/edit notes in certain folders?**
+A: This could be due to:
+1. Path security restrictions (trying to write outside vault)
+2. Folder permissions
+3. File locks from other processes
+
+Try:
+1. Using relative paths within your vault
+2. Checking folder permissions
+3. Closing other programs that might have the files open
+
+**Q: Why are my note updates not being saved?**
+A: Common causes:
+1. The note path is incorrect
+2. The content format is invalid
+3. Backup creation failed
+
+Check:
+1. The note path exists and is accessible
+2. The content is valid markdown
+3. The backup directory has write permissions
+
+### Daily Notes
+
+**Q: Why aren't my daily notes being created in the right location?**
+A: Verify:
+1. `OMCP_DAILY_NOTE_LOCATION` is set correctly in `.env`
+2. The path uses forward slashes
+3. The target folder exists
+4. The date format matches your vault's settings
+
+### General Troubleshooting
+
+**Q: How do I check if the server is working correctly?**
+A: Run the test client:
+```bash
+python test_client.py
+```
+This will perform a series of operations and report any issues.
+
+**Q: Where can I find error logs?**
+A: Check:
+1. The terminal where the server is running
+2. The backup directory for failed operations
+3. The system event logs for permission issues
+
+**Q: How do I reset everything to start fresh?**
+A: Try these steps:
+1. Stop the server
+2. Delete the `.env` file
+3. Create a new `.env` from `.env.example`
+4. Restart the server
 
 **Contributions Welcome!**
-
-If you have ideas or want to contribute, please check out the GitHub issues and discussions!
