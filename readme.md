@@ -69,18 +69,25 @@ This server is configured using environment variables, which can be conveniently
 
 *(Alternatively, instead of using a `.env` file, you can set these as actual system environment variables. The server will prioritize system environment variables over the `.env` file if both are set.)*
 
-## Running the Server
+## Running Manually (for Testing/Debugging)
 
-Once installed and configured, run the server from the project root directory:
+While client applications like Claude Desktop will launch the server automatically using the configuration described below, you can also run the server manually from your terminal for direct testing or debugging.
 
-```bash
-# Make sure your virtual environment is active!
-(.venv) ...> python obsidian_mcp_server/main.py 
-```
+1.  **Ensure Configuration is Done:** Make sure you have created and configured your `.env` file as described in the Configuration section.
+2.  **Activate Virtual Environment:**
+    ```powershell
+    # If not already active
+    .venv\Scripts\Activate.ps1 
+    ```
+    *(Use `source .venv/bin/activate` on Linux/macOS)*
+3.  **Run the server script:**
+    ```bash
+    (.venv) ...> python obsidian_mcp_server/main.py 
+    ```
 
-The server will start, typically listening on `http://127.0.0.1:8001` (or the port configured in `.env` / `config.py`). MCP clients can then connect to the server's `/sse` endpoint (e.g., `http://127.0.0.1:8001/sse`) to use the available tools.
+The server will start and print the address it's listening on (e.g., `http://127.0.0.1:8001`). You would typically press `Ctrl+C` to stop it when finished testing.
 
-**Note:** If running via a client launcher like Claude Desktop, you usually *don't* run this command manually. Instead, you configure the launcher as shown below.
+**Remember:** If you intend to use this server with Claude Desktop or a similar launcher, you should **not** run it manually like this. Configure the client application instead (see next section), and it will handle starting and stopping the server process.
 
 ## Client Configuration (Example: Claude Desktop)
 
