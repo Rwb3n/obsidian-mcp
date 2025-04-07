@@ -14,69 +14,121 @@ Allows MCP clients (like AI assistants) to:
 
 ## Installation
 
-```bash
-# Clone the repository (if you haven't already)
-# git clone <repository-url>
-# cd OMCP
+1.  **Clone the repository** (if you haven't already):
+    ```bash
+    # git clone <repository-url>
+    # cd OMCP 
+    ```
 
-# Create and activate a virtual environment (recommended)
-python -m venv .venv
-# On Windows PowerShell:
-.venv\Scripts\Activate.ps1
-# On Linux/macOS:
-# source .venv/bin/activate
+2.  **Navigate to the project directory**:
+    ```bash
+    cd /path/to/your/OMCP 
+    ```
 
-# Install the package
-pip install .
-```
+3.  **Create a Python virtual environment** (recommended to avoid dependency conflicts):
+    ```bash
+    python -m venv .venv 
+    ```
+
+4.  **Activate the virtual environment**:
+    *   On Windows PowerShell:
+        ```powershell
+        .venv\Scripts\Activate.ps1 
+        ```
+    *   On Linux/macOS:
+        ```bash
+        source .venv/bin/activate 
+        ```
+    (Your terminal prompt should now show `(.venv)` at the beginning)
+
+5.  **Install the package** and its dependencies:
+    ```bash
+    pip install . 
+    ```
 
 ## Configuration
 
-Configuration is managed via a `.env` file in the project root. Create this file with the following variables:
+This server is configured using environment variables, which can be conveniently managed using a `.env` file in the project root.
 
-```dotenv
-# --- Required --- 
-# Absolute path to your Obsidian vault
-OMCP_VAULT_PATH="D:/Path/To/Your/Obsidian/Vault"
+1.  **Copy the example file:**
+    ```bash
+    # From the project root directory (OMCP/)
+    cp .env.example .env 
+    ```
+    (On Windows, you might use `copy .env.example .env`)
 
-# --- Optional (Daily Notes) ---
-# Format for daily note filenames (using strftime directives)
-OMCP_DAILY_NOTE_FORMAT="%Y-%m-%d" 
-# Relative path within the vault where daily notes are stored (use forward slashes)
-OMCP_DAILY_NOTE_LOCATION="Journal/Daily"
-# Optional template file (relative path) to use for new daily notes
-# OMCP_DAILY_NOTE_TEMPLATE="Templates/Daily Note Template.md"
-```
+2.  **Edit the `.env` file:**
+    Open the newly created `.env` file in a text editor.
 
-Replace the example paths with your actual vault path and desired daily note settings.
+3.  **Set `OMCP_VAULT_PATH`:** This is the only **required** variable. Update it with the **absolute path** to your Obsidian vault. Use forward slashes (`/`) for paths, even on Windows.
+    ```dotenv
+    OMCP_VAULT_PATH="/path/to/your/Obsidian/Vault" 
+    ```
+
+4.  **Review Optional Settings:** Adjust the other `OMCP_` variables for daily notes, server port, or backup directory if needed. Read the comments in the file for explanations.
+
+*(Alternatively, instead of using a `.env` file, you can set these as actual system environment variables. The server will prioritize system environment variables over the `.env` file if both are set.)*
 
 ## Running the Server
 
 Once installed and configured, run the server from the project root directory:
 
 ```bash
-python main.py
+# Make sure your virtual environment is active!
+(.venv) ...> python obsidian_mcp_server/main.py 
 ```
 
-The server will start, typically listening on `http://127.0.0.1:8000`. MCP clients can then connect to this address to use the available tools.
+The server will start, typically listening on `http://127.0.0.1:8001` (or the port configured in `.env` / `config.py`). MCP clients can then connect to the server's `/sse` endpoint (e.g., `http://127.0.0.1:8001/sse`) to use the available tools.
+
+**Note:** If running via a client launcher like Claude Desktop, you usually *don't* run this command manually. Instead, you configure the launcher as shown below.
+
+## Client Configuration (Example: Claude Desktop)
+
+Many MCP clients (like Claude Desktop) can launch server processes directly. To configure such a client, you typically need to edit its JSON configuration file (e.g., `claude_desktop_config.json` on macOS/Linux, find the equivalent path on Windows under `AppData`).
+
+You need to provide the command to run the Python interpreter *from the virtual environment* and the path to the server's `main.py` script.
+
+Here's an example entry to add under the `mcpServers` key in the client's JSON configuration:
+
+```json
+{
+  "mcpServers": {
+    // ... other potential servers ...
+
+    "obsidian_vault": { // Choose a descriptive name
+      "command": "/path/to/your/project/OMCP/.venv/bin/python", // Linux/macOS Example
+      // OR
+      // "command": "C:\\path\\to\\your\\project\\OMCP\\.venv\\Scripts\\python.exe", // Windows Example (Note escaped backslashes)
+      
+      "args": [
+        "/path/to/your/project/OMCP/obsidian_mcp_server/main.py" // Linux/macOS Example
+        // OR
+        // "args": ["C:\\path\\to\\your\\project\\OMCP\\obsidian_mcp_server\\main.py"] // Windows Example
+      ],
+      
+      // Optional but RECOMMENDED: Pass vault path via environment
+      "env": { 
+        "OMCP_VAULT_PATH": "/path/to/your/Obsidian/Vault" // Linux/macOS Example
+        // OR
+        // "OMCP_VAULT_PATH": "C:/path/to/your/Obsidian/Vault" // Windows Example (Forward slashes often work better in env vars)
+        
+        // Add other OMCP_* variables from your .env file if needed/desired
+        // "OMCP_DAILY_NOTE_LOCATION": "Journal/Daily"
+      }
+    }
+
+  }
+}
+```
+
+**Key Points:**
+
+*   Replace `/path/to/your/project/OMCP/` and `/path/to/your/Obsidian/Vault` with the **absolute paths** relevant to your system.
+*   The `command` path **must** point to the `python` (or `python.exe`) executable *inside* the `.venv` you created for this project.
+*   The `args` path **must** point to the `main.py` file within the `obsidian_mcp_server` subfolder.
+*   Using the `env` block is the most reliable way to ensure the server finds your vault path when launched by the client.
+*   Remember to **restart the client application** (e.g., Claude Desktop) after modifying its JSON configuration.
 
 ## Available MCP Tools
 
 - `list_folders`
-- `list_notes`
-- `get_note_content`
-- `get_note_metadata`
-- `get_outgoing_links`
-- `get_backlinks`
-- `get_all_tags`
-- `create_note`
-- `edit_note`
-- `append_to_note`
-- `update_note_metadata`
-- `delete_note`
-- `search_notes_content`
-- `search_notes_metadata`
-- `search_folders`
-- `get_daily_note_path`
-- `create_daily_note`
-- `append_to_daily_note`
