@@ -46,4 +46,9 @@ logs/
 # Testing
 .pytest_cache/
 .coverage
-htmlcov/ 
+htmlcov/
+test_client.py
+test_delete_client.py
+
+# AI Assistant Configuration/State
+.aiconfig/
