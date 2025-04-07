@@ -23,8 +23,7 @@ dist/
 .env
 *.env
 .env.*
-!env.example # Allow example file
-!*.env.example # Allow example files
+!.env.example  # Explicitly allow .env.example
 
 # OS Files
 .DS_Store
