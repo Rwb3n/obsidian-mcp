@@ -138,7 +138,24 @@ Here's an example entry to add under the `mcpServers` key in the client's JSON c
 
 ## Available MCP Tools
 
-- `list_folders`
+*   `list_folders`
+*   `list_notes`
+*   `get_note_content`
+*   `get_note_metadata`
+*   `get_outgoing_links`
+*   `get_backlinks`
+*   `get_all_tags`
+*   `search_notes_content`
+*   `search_notes_metadata`
+*   `search_folders`
+*   `create_note`
+*   `edit_note`
+*   `append_to_note`
+*   `update_note_metadata`
+*   `delete_note`
+*   `get_daily_note_path`
+*   `create_daily_note`
+*   `append_to_daily_note`
 
 ## Roadmap
 
