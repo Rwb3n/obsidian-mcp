@@ -139,3 +139,42 @@ Here's an example entry to add under the `mcpServers` key in the client's JSON c
 ## Available MCP Tools
 
 - `list_folders`
+
+## Roadmap
+
+This project is actively developed. Here's a look at planned features:
+
+**v1.x (Near Term)**
+
+*   **Template-Based Note Creation:**
+    *   Configure a template directory (`OMCP_TEMPLATE_DIR`).
+    *   Implement `create_note_from_template` tool (using template name, target path, optional metadata).
+    *   Add tests for template creation.
+*   **Folder Creation:**
+    *   Implement `create_folder` utility function.
+    *   Implement `create_folder` MCP tool.
+    *   Add tests for folder creation.
+
+**v1.y (Mid Term / Future Enhancements)**
+
+*   Variable substitution in templates (e.g., `{{DATE}}`).
+*   `list_templates` tool.
+*   Advanced note update tools (e.g., `append_to_note_by_metadata`).
+*   Comprehensive testing review and expansion.
+
+**v2.x+ (Potential Ideas / Longer Term)**
+
+*   **Organization Tools:**
+    *   `move_item(source, destination)` (Initial version might not update links).
+    *   `rename_item(path, new_name)` (Initial version might not update links).
+*   **Content Manipulation Tools:**
+    *   `replace_text_in_note(path, old, new, count)`.
+    *   `prepend_to_note(path, content)`.
+    *   `append_to_section(path, heading, content)` (Requires reliable heading parsing).
+*   **Querying Tools:**
+    *   `get_local_graph(path)` (Combine outgoing/backlinks).
+    *   `search_notes_by_metadata_field(key, value)`.
+
+**Contributions Welcome!**
+
+If you have ideas or want to contribute, please check out the GitHub issues and discussions!
