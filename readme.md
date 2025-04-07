@@ -283,6 +283,58 @@ Example of correct Windows path formatting:
 }
 ```
 
+**Q: I get a timeout error and "Server disconnected" message. What's happening?**
+A: This error pattern (initialization succeeds, then times out after 60 seconds) usually means:
+1. The server is already running in another process
+2. The port is already in use by another application
+3. The server process is being terminated unexpectedly
+
+Try these steps in order:
+
+1. **Check for running server processes:**
+   ```powershell
+   # On Windows
+   netstat -ano | findstr :8001
+   # Look for the PID and then:
+   taskkill /F /PID <PID>
+   ```
+   ```bash
+   # On Linux/macOS
+   lsof -i :8001
+   # Look for the PID and then:
+   kill -9 <PID>
+   ```
+
+2. **Check for other applications using the port:**
+   - Close any other applications that might use port 8001
+   - This includes other MCP servers, development servers, or any web applications
+   - If you're not sure, try changing the port in your `.env`:
+     ```dotenv
+     OMCP_SERVER_PORT=8002
+     ```
+
+3. **Verify server process:**
+   - Open Task Manager (Windows) or Activity Monitor (macOS)
+   - Look for any Python processes related to the MCP server
+   - End any suspicious processes
+
+4. **Check system resources:**
+   - Ensure you have enough memory and CPU available
+   - Check if any antivirus or security software is blocking the process
+   - Verify your Python environment has proper permissions
+
+5. **Reset everything:**
+   - Stop the client application
+   - Kill any remaining server processes
+   - Delete the `.env` file and create a new one from `.env.example`
+   - Restart your computer (if other steps don't work)
+   - Start fresh with the client application
+
+If the issue persists after trying all these steps, please share:
+1. The complete error log
+2. The output of `netstat -ano | findstr :8001` (Windows) or `lsof -i :8001` (Linux/macOS)
+3. Any error messages from your system's event logs
+
 ### Note Operations
 
 **Q: Why can't I create/edit notes in certain folders?**
