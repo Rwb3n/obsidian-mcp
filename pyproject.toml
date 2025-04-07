@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obsidian_mcp_tool"
+version = "1.0.0"
+authors = [
+  { name="Your Name / AI Assistant", email="your@email.com" },
+]
+description = "An MCP server exposing tools to interact with an Obsidian vault."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License", # Assuming MIT, change if needed
+    "Operating System :: OS Independent",
+    "Topic :: Office/Business :: Notes/Organization",
+    "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
+]
+dependencies = [
+    "mcp",
+    "pydantic-settings",
+    "python-dotenv",
+    "pyyaml",
+    "fastapi", # Required by mcp[fastmcp]
+    "uvicorn[standard]", # Required by mcp[fastmcp]
+    "aiofiles", # Although not explicitly used, good for potential future async file ops
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/OMCP" # Replace with your actual URL
+"Bug Tracker" = "https://github.com/yourusername/OMCP/issues" # Replace with your actual URL
+
+# Optional: Define entry point if you want a command-line script
+# [project.scripts]
+# obsidian-mcp-server = "obsidian_mcp_server.__main__:main" # Example, requires creating __main__.py 
