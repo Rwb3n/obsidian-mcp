@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "obsidian_mcp_tool"
 version = "1.0.0"
 authors = [
-  { name="Your Name / AI Assistant", email="your@email.com" },
+  { name="Rwb3n / Gemini 2.5 pro" },
 ]
 description = "An MCP server exposing tools to interact with an Obsidian vault."
 readme = "README.md"
