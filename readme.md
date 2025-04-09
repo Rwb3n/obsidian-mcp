@@ -1,3 +1,5 @@
+![Obsidian MCP Server Banner](OMCP.png)
+
 # Obsidian MCP Tool Server
 
 This project provides a Model Context Protocol (MCP) server that exposes tools for interacting with an Obsidian vault.
@@ -208,18 +210,6 @@ This project is actively developed. Here's a look at planned features:
 
 ### Configuration Issues
 
-**Q: Why isn't my `.env.example` file being pushed to GitHub?**
-A: This is likely due to the `.gitignore` file. While we have rules to allow `.env.example`, sometimes git can be overly aggressive. Try these steps:
-1. Check if the file is being ignored: `git check-ignore -v .env.example`
-2. If it is, try forcing the add: `git add -f .env.example`
-3. If that doesn't work, verify your `.gitignore` has these lines:
-   ```gitignore
-   .env
-   *.env
-   .env.*
-   !.env.example  # Explicitly allow .env.example
-   ```
-
 **Q: My server can't find my vault. What's wrong?**
 A: This is usually due to incorrect path configuration. Check:
 1. The `OMCP_VAULT_PATH` in your `.env` file uses forward slashes (`/`) even on Windows
@@ -334,6 +324,45 @@ If the issue persists after trying all these steps, please share:
 1. The complete error log
 2. The output of `netstat -ano | findstr :8001` (Windows) or `lsof -i :8001` (Linux/macOS)
 3. Any error messages from your system's event logs
+
+**Q: The server disconnects immediately with "Server transport closed unexpectedly... process exiting early". What's wrong?**
+A: This error means the Python server process crashed almost immediately after being launched by the client. It's not a timeout; the server script itself failed to run or stay running.
+
+Common Causes:
+1.  **Incorrect Paths in Client JSON:**
+    *   `command` doesn't point to the correct `python.exe` *inside* the `.venv`.
+    *   `args` doesn't point to the correct `obsidian_mcp_server/main.py` script.
+    *   Incorrect path separators or missing backslash escapes (`\\`) on Windows.
+2.  **Missing Dependencies:**
+    *   Required packages from `requirements.txt` are not installed in the `.venv`.
+    *   The client is launching Python without properly activating the virtual environment.
+3.  **Syntax Errors:** A recent code change introduced a Python syntax error.
+4.  **Critical Configuration/Permission Error:**
+    *   Error reading the `.env` file at startup.
+    *   Invalid or inaccessible `OMCP_VAULT_PATH`.
+    *   Python process lacks permissions to run or access files.
+5.  **Early Unhandled Exception:** An error occurs during initial setup before the server starts listening.
+
+Troubleshooting Steps:
+1.  **Verify Client JSON Paths:** Double-check the absolute paths for `command` and `args` in your client's JSON config. Use escaped backslashes (`\\`) for Windows paths.
+2.  **Test Manually (Crucial Step):**
+    *   Activate the virtual environment in your terminal:
+        ```powershell
+        # On Windows
+        .\.venv\Scripts\activate
+        ```
+        ```bash
+        # On Linux/macOS
+        source .venv/bin/activate
+        ```
+    *   Run the server directly:
+        ```bash
+        python obsidian_mcp_server/main.py
+        ```
+    *   Look closely for any error messages printed directly in the terminal. This bypasses the client and often reveals the root cause (like `ImportError`, `SyntaxError`, `FileNotFoundError`).
+3.  **Check Dependencies:** With the venv activated, run `pip check` and `pip install -r requirements.txt`.
+4.  **Validate `.env` and Vault Path:** Ensure `.env` exists, is readable, and `OMCP_VAULT_PATH` is correct (use forward slashes `/`).
+5.  **Review Recent Code Changes:** Check for syntax errors or issues in recently edited Python files.
 
 ### Note Operations
 
