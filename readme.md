@@ -4,6 +4,18 @@
 
 This project provides a Model Context Protocol (MCP) server that exposes tools for interacting with an Obsidian vault.
 
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running Manually (for Testing/Debugging)](#running-manually-for-testingdebugging)
+- [Client Configuration (Example: Claude Desktop)](#client-configuration-example-claude-desktop)
+- [Available MCP Tools](#available-mcp-tools)
+- [Roadmap](#roadmap)
+- [Frequently Asked Questions (FAQ)](#frequently-asked-questions-faq)
+- [Contributions Welcome!](#contributions-welcome)
+
 ## Features
 
 Allows MCP clients (like AI assistants) to:
