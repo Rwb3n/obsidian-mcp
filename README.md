@@ -240,7 +240,7 @@ A: This typically happens when:
 3. The vault is in a cloud-synced folder (like OneDrive) that's currently syncing
 
 Try:
-1. Moving your vault to a local directory
+1. Moving your vault to local directory
 2. Running the server with elevated permissions
 3. Checking your antivirus isn't blocking access
 
