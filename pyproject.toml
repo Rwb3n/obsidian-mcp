@@ -30,8 +30,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/OMCP" # Replace with your actual URL
-"Bug Tracker" = "https://github.com/yourusername/OMCP/issues" # Replace with your actual URL
+"Homepage" = "https://github.com/Rwb3n/obsidian-mcp" # Replace with your actual URL
+"Bug Tracker" = "https://github.com/Rwb3n/obsidian-mcp/issues" # Replace with your actual URL
 
 # Optional: Define entry point if you want a command-line script
 # [project.scripts]
