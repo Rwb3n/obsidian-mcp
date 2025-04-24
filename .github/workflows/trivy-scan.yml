@@ -1,0 +1,56 @@
+name: Trivy + Bandit Security Scan
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '**/*.py'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - '**/*.py'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: 1
+          severity: 'HIGH,CRITICAL'
+          skip-dirs: '.venv'
+
+  bandit-scan:
+    runs-on: ubuntu-latest
+    needs: trivy-scan
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit excluding .venv
+        run: |
+          find . -type f -name "*.py" -not -path "*/.venv/*" \
+            | xargs bandit -ll -r
+
