@@ -2,11 +2,11 @@ name: Trivy + Bandit Security Scan
 
 on:
   push:
-    branches: [main, rivassec/security_improvements]
+    branches: [main, master]
     paths:
       - '**/*.py'
   pull_request:
-    branches: [main, rivassec/security_improvements]
+    branches: [main, master]
     paths:
       - '**/*.py'
 
