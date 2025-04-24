@@ -340,7 +340,7 @@ def append_to_note(
     logger.debug(f"Attempting to append to note (simplified): {full_path}")
 
     # Re-enable backup check
-    if backup: # Check if backup is requested
+    if backup: # Check i backup is requested
         # Ensure backup directory is set if needed (copied from create/edit)
         if not backup_dir:
             backup_dir = os.path.join(vault_path, ".backup")
