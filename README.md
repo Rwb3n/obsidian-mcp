@@ -178,6 +178,8 @@ Here's an example entry to add under the `mcpServers` key in the client's JSON c
 
 ## Roadmap
 
+For a detailed, phased implementation plan including error handling considerations, please see the [ROADMAP.md](ROADMAP.md) file.
+
 This project is actively developed. Here's a look at planned features:
 
 **v1.x (Near Term)**

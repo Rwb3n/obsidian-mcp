@@ -13,7 +13,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License", # Assuming MIT, change if needed
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Office/Business :: Notes/Organization",
     "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
@@ -30,8 +30,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/Rwb3n/obsidian-mcp" # Replace with your actual URL
-"Bug Tracker" = "https://github.com/Rwb3n/obsidian-mcp/issues" # Replace with your actual URL
+"Homepage" = "https://github.com/Rwb3n/obsidian-mcp" 
+"Bug Tracker" = "https://github.com/Rwb3n/obsidian-mcp/issues" 
 
 # Optional: Define entry point if you want a command-line script
 # [project.scripts]
