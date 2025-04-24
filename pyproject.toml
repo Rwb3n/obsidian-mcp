@@ -26,6 +26,7 @@ dependencies = [
     "fastapi", # Required by mcp[fastmcp]
     "uvicorn[standard]", # Required by mcp[fastmcp]
     "aiofiles", # Although not explicitly used, good for potential future async file ops
+    "h11>=0.16.0"
 ]
 
 [project.urls]
