@@ -1,5 +1,22 @@
 # Obsidian MCP Tool Server - Implementation Roadmap
 
+## Updated Project Overview & Functionality
+
+At its core, this server functions as a specialized tool for interacting with files and directories on the local filesystem, exposed via the Model Context Protocol (MCP). However, it is specifically tailored to operate intelligently within the context of an **Obsidian vault**.
+
+While the fundamental actions involve standard file I/O (reading, writing, creating, deleting files/folders), the server implements a crucial layer of "Obsidian awareness":
+
+*   **Vault Context:** Operates within a defined vault root directory (`OMCP_VAULT_PATH`).
+*   **Markdown Focus:** Treats `.md` files as primary note objects.
+*   **YAML Frontmatter:** Parses, manipulates, and searches YAML frontmatter, enabling interaction with structured metadata within notes.
+*   **Linking Conventions:** Understands and parses Obsidian's `[[wikilink]]` syntax for graph navigation (outgoing links, backlinks).
+*   **Daily Note Logic:** Implements logic based on common Obsidian daily note configurations (paths, creation).
+*   **Tag Recognition:** Identifies `#tags` within notes.
+
+This targeted approach allows the server to provide MCP tools that are semantically meaningful for interacting with Obsidian data, going beyond generic file manipulation. The phased implementation plan detailed below outlines the introduction of specific tools designed around these Obsidian conventions, covering reading, writing, searching, navigation, and organization within the vault structure.
+
+---
+
 This roadmap outlines the planned implementation order for new MCP tools and features for the Obsidian MCP Tool Server. Each phase builds upon the previous ones.
 
 **Implementation Philosophy:** This server operates directly on the vault files. While leveraging internal Obsidian functions (like complex templating plugins) might seem appealing, it would require a companion Obsidian plugin, significantly increasing complexity and dependencies. Therefore, this roadmap focuses on implementing necessary vault interactions directly within the server for robustness and self-containment.
@@ -8,6 +25,7 @@ This roadmap outlines the planned implementation order for new MCP tools and fea
 *   **Robust Error Handling:** Utilize specific custom exceptions (`VaultError`, `NoteNotFoundError`, `InvalidPathError`, etc.) where appropriate. Provide clear, informative error messages to the client/logs. Gracefully handle expected failure conditions (file not found, permissions, invalid input, configuration issues).
 *   **Standard Logging:** Employ Python's `logging` framework to record significant events, configuration loading, tool execution (start/end/success/failure), and detailed error information (including stack traces where helpful).
 *   **Edge Case Consideration:** Actively consider and test edge cases (e.g., empty files, missing configuration values, name collisions, non-existent paths).
+*   **File Length Constraint:** Aim to keep individual Python source files under a soft limit of **200 lines of code (LoC)**. Refactor overly long files into smaller, focused modules to improve readability and maintainability.
 
 ---
 
