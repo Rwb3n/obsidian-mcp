@@ -13,7 +13,9 @@ from obsidian_mcp_server.mcp_server import mcp_app
 
 # Import logging and config
 import logging
-from obsidian_mcp_server.config import settings # Assuming config might be needed
+from obsidian_mcp_server.config import settings
+
+logger = logging.getLogger("obsidian_mcp_server")
 
 # Configure logging explicitly for DEBUG level
 # Remove previous explicit logger configuration block
@@ -62,21 +64,20 @@ LOGGING_CONFIG = {
 # --- End Uvicorn Logging Configuration ---
 
 # --- Main Execution Block ---
-if __name__ == "__main__":
-    # Configuration (use settings from config.py if available)
-    HOST = settings.server_host # Get host from config
-    PORT = settings.server_port # Get port from config
+def main():
+    # Log to stderr only: with the stdio transport, stdout carries the MCP protocol.
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    transport = settings.server_transport
+    if transport == "stdio":
+        logger.info("Starting Obsidian MCP Server on stdio")
+    else:
+        logger.info(f"Starting Obsidian MCP Server ({transport}) on http://{settings.server_host}:{settings.server_port}")
+    mcp_app.run(transport=transport)
 
-    print(f"Starting Obsidian MCP Server (via FastMCP internal server) on http://{HOST}:{PORT}")
-    
-    # Directly run the FastMCP app, specifying SSE transport
-    # Host/Port are configured during FastMCP initialization in mcp_server.py
-    # log_config is not directly supported by FastMCP.run() (uses internal logging)
-    try:
-        mcp_app.run(transport="sse") # Specify transport="sse"
-    except Exception as run_e:
-         print(f"An unexpected error occurred trying to run the MCP server: {run_e}")
+
+if __name__ == "__main__":
+    main()
 
 # Remove old FastAPI app instantiation and uvicorn.run call
 # app = FastAPI(...) 
-# uvicorn.run(app, ...) 
+# uvicorn.run(app, ...) 

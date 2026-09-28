@@ -103,7 +103,9 @@ While client applications like Claude Desktop will launch the server automatical
     (.venv) ...> python obsidian_mcp_server/main.py 
     ```
 
-The server will start and print the address it's listening on (e.g., `http://127.0.0.1:8001`). You would typically press `Ctrl+C` to stop it when finished testing.
+By default the server speaks MCP over stdin/stdout (the `stdio` transport used by Claude Desktop), so run this way it simply waits for a client on stdin. To serve over HTTP instead, set `OMCP_SERVER_TRANSPORT=sse` (or `streamable-http`); the server then logs the address it's listening on (e.g., `http://127.0.0.1:8001`). Press `Ctrl+C` to stop it.
+
+**Security note:** the server only reads and writes `.md` notes inside the vault. Paths that escape the vault (including via symlinks), hidden folders such as `.obsidian/`, and the backup folder are rejected.
 
 **Remember:** If you intend to use this server with Claude Desktop or a similar launcher, you should **not** run it manually like this. Configure the client application instead (see next section), and it will handle starting and stopping the server process.
 

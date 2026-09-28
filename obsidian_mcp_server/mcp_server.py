@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import Any, Dict, Optional, List
 import json # Import json
 
@@ -14,6 +15,8 @@ from obsidian_mcp_server.utils.exceptions import VaultError, NoteNotFoundError, 
 
 # Import our central config
 from obsidian_mcp_server.config import settings
+
+logger = logging.getLogger(__name__)
 
 # --- Instantiate FastMCP Server ---
 # Give it a name relevant to its function
@@ -38,7 +41,7 @@ def search_notes_content(query: str) -> List[str]:
         return vault_search.search_notes_content(query)
     except VaultError as e:
         # TODO: Map to specific MCP error (e.g., Internal Server Error)
-        print(f"Error in search_notes_content tool: {e}")
+        logger.error(f"Error in search_notes_content tool: {e}")
         raise # Let FastMCP handle for now
 
 # Changed from resource to tool
@@ -48,7 +51,7 @@ def search_notes_metadata(query: str) -> List[str]:
     try:
         return vault_search.search_notes_metadata(query)
     except VaultError as e:
-        print(f"Error in search_notes_metadata tool: {e}")
+        logger.error(f"Error in search_notes_metadata tool: {e}")
         raise
 
 # Changed from resource to tool
@@ -58,7 +61,7 @@ def search_folders(query: str) -> List[str]:
     try:
         return vault_search.search_folders(query)
     except VaultError as e:
-        print(f"Error in search_folders tool: {e}")
+        logger.error(f"Error in search_folders tool: {e}")
         raise
 
 # Changed from resource to tool
@@ -77,7 +80,7 @@ def get_daily_note_path(target_date_iso: Optional[str] = None) -> str:
         # get_daily_note_path now raises error instead of returning None
         return path
     except (VaultError, InvalidPathError) as e:
-        print(f"Error in get_daily_note_path tool: {e}")
+        logger.error(f"Error in get_daily_note_path tool: {e}")
         raise
 
 
@@ -91,7 +94,7 @@ def list_folders(relative_path: str = ".") -> List[str]:
         # list_folders now raises error instead of returning None
         return vault_reader.list_folders(relative_path)
     except (VaultError, InvalidPathError) as e:
-        print(f"Error in list_folders tool: {e}")
+        logger.error(f"Error in list_folders tool: {e}")
         raise # Let FastMCP handle exceptions
 
 @mcp_app.tool()
@@ -101,7 +104,7 @@ def list_notes(relative_path: str = ".") -> List[str]:
         # list_notes now raises error instead of returning None
         return vault_reader.list_notes(relative_path)
     except (VaultError, InvalidPathError) as e:
-        print(f"Error in list_notes tool: {e}")
+        logger.error(f"Error in list_notes tool: {e}")
         raise
 
 @mcp_app.tool()
@@ -111,7 +114,7 @@ def get_note_content(note_path: str) -> str:
         # get_note_content now raises error instead of returning None
         return vault_reader.get_note_content(note_path)
     except (VaultError, InvalidPathError, NoteNotFoundError) as e:
-        print(f"Error in get_note_content tool: {e}")
+        logger.error(f"Error in get_note_content tool: {e}")
         raise
 
 @mcp_app.tool()
@@ -121,7 +124,7 @@ def get_note_metadata(note_path: str) -> Dict[str, Any]:
         # get_note_metadata returns {} on parse error, raises on read error
         return vault_reader.get_note_metadata(note_path)
     except (VaultError, InvalidPathError, NoteNotFoundError, MetadataError) as e:
-        print(f"Error in get_note_metadata tool: {e}")
+        logger.error(f"Error in get_note_metadata tool: {e}")
         raise
 
 @mcp_app.tool()
@@ -130,7 +133,7 @@ def get_outgoing_links(note_path: str) -> List[str]:
     try:
         return vault_reader.get_outgoing_links(note_path)
     except (VaultError, InvalidPathError, NoteNotFoundError) as e:
-        print(f"Error in get_outgoing_links tool: {e}")
+        logger.error(f"Error in get_outgoing_links tool: {e}")
         raise
 
 @mcp_app.tool()
@@ -140,10 +143,10 @@ def get_backlinks(note_path: str) -> str:
         backlink_list = vault_reader.get_backlinks(note_path)
         return json.dumps(backlink_list) # Return as JSON string
     except (NoteNotFoundError, InvalidPathError, VaultError) as e:
-        print(f"Error in get_backlinks tool: {e}")
+        logger.error(f"Error in get_backlinks tool: {e}")
         raise # Propagate known errors
     except Exception as e:
-        print(f"Unexpected error in get_backlinks tool: {e}")
+        logger.error(f"Unexpected error in get_backlinks tool: {e}")
         raise VaultError(f"Unexpected error finding backlinks for {note_path}: {e}") from e
 
 @mcp_app.tool()
@@ -153,7 +156,7 @@ def get_all_tags() -> str: # Return type is now a JSON string
         tag_list = vault_reader.get_all_tags()
         return json.dumps(tag_list) # Explicitly dump list to JSON string
     except VaultError as e: # Catch potential general VaultErrors from os.walk etc.
-        print(f"Error in get_all_tags tool: {e}")
+        logger.error(f"Error in get_all_tags tool: {e}")
         raise
 
 # --- Writer Tools (Already tools, unchanged) ---
@@ -189,7 +192,7 @@ def delete_note(relative_note_path: str, backup: bool = True) -> bool:
         # vault_writer.delete_note raises exceptions on failure
         return vault_writer.delete_note(relative_note_path, backup)
     except (NoteNotFoundError, InvalidPathError, BackupError, VaultError) as e:
-        print(f"Error in delete_note tool: {e}")
+        logger.error(f"Error in delete_note tool: {e}")
         raise # Let FastMCP handle the error propagation
 
 @mcp_app.tool()
@@ -200,7 +203,7 @@ def create_daily_note(target_date_iso: Optional[str] = None, force_create: bool 
         try:
             target_dt = datetime.date.fromisoformat(target_date_iso)
         except ValueError:
-            print(f"Error: Invalid date format: {target_date_iso}. Use YYYY-MM-DD.")
+            logger.error(f"Invalid date format: {target_date_iso}. Use YYYY-MM-DD.")
             return None # Or raise?
     return daily_notes.create_daily_note(target_dt, force_create)
 
@@ -212,8 +215,8 @@ def append_to_daily_note(content_to_append: str, target_date_iso: Optional[str] 
         try:
             target_dt = datetime.date.fromisoformat(target_date_iso)
         except ValueError:
-            print(f"Error: Invalid date format: {target_date_iso}. Use YYYY-MM-DD.")
+            logger.error(f"Invalid date format: {target_date_iso}. Use YYYY-MM-DD.")
             return False # Or raise?
     return daily_notes.append_to_daily_note(content_to_append, target_dt, backup)
 
-# Note: The old handle_mcp_request and ACTION_MAP are removed. 
+# Note: The old handle_mcp_request and ACTION_MAP are removed. 

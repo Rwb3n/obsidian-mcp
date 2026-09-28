@@ -1,14 +1,16 @@
 import os
 import datetime
-import shutil
 import re # Import regular expressions
+import logging
 # Import config, exceptions, and writers
 from obsidian_mcp_server.config import settings
 from obsidian_mcp_server.utils.vault_writer import create_note, append_to_note # VAULT_PATH no longer needed from here
 from obsidian_mcp_server.utils.exceptions import VaultError, NoteNotFoundError, InvalidPathError, NoteCreationError, MetadataError, BackupError
+from obsidian_mcp_server.utils.paths import resolve_vault_path
+
+logger = logging.getLogger(__name__)
 
 # Use config settings
-VAULT_PATH = settings.obsidian_vault_path
 DAILY_NOTE_LOCATION = settings.daily_note_location
 DAILY_NOTE_FORMAT = settings.daily_note_format
 DAILY_NOTE_TEMPLATE_PATH = settings.daily_note_template_path # Can be None
@@ -53,14 +55,14 @@ def get_daily_note_path(target_date=None):
                     return match.group(0) # Return original if format invalid
             else:
                 # If format code unknown, return the original placeholder
-                print(f"Warning: Unknown daily note location format code '{{{{date:{format_code}}}}}'")
+                logger.warning(f"Unknown daily note location format code '{{{{date:{format_code}}}}}'")
                 return match.group(0)
 
         # Use re.sub to find and replace all placeholders
         try:
             processed_location = re.sub(r"{{date:([^{}]+)}}", replace_date_placeholder, location_template)
         except Exception as regex_e:
-            print(f"Warning: Error processing daily_note_location template '{location_template}'. Using as is. Error: {regex_e}")
+            logger.warning(f"Error processing daily_note_location template '{location_template}'. Using as is. Error: {regex_e}")
             processed_location = location_template # Fallback
 
         if processed_location == "/" or processed_location == "." or not processed_location:
@@ -96,7 +98,7 @@ def create_daily_note(target_date=None, force_create=False):
         # Propagate path calculation errors
         raise VaultError(f"Failed to get daily note path for {target_date}: {e}") from e
 
-    full_path = os.path.join(VAULT_PATH, relative_path)
+    full_path = resolve_vault_path(relative_path, require_note=True)
 
     if os.path.exists(full_path) and not force_create:
         # print(f"Daily note already exists: {relative_path}") # Less verbose
@@ -105,16 +107,19 @@ def create_daily_note(target_date=None, force_create=False):
     # Determine content (template or empty)
     content = ""
     if DAILY_NOTE_TEMPLATE_PATH:
-        template_full_path = os.path.join(VAULT_PATH, DAILY_NOTE_TEMPLATE_PATH)
-        if os.path.abspath(template_full_path).startswith(os.path.abspath(VAULT_PATH)) and os.path.isfile(template_full_path):
+        try:
+            template_full_path = resolve_vault_path(DAILY_NOTE_TEMPLATE_PATH)
+        except InvalidPathError:
+            template_full_path = None
+        if template_full_path and os.path.isfile(template_full_path):
             try:
                 with open(template_full_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 # print(f"Using template: {DAILY_NOTE_TEMPLATE_PATH}")
             except Exception as e:
-                print(f"Warning: Failed to read template {DAILY_NOTE_TEMPLATE_PATH}: {e}. Creating empty.")
+                logger.warning(f"Failed to read template {DAILY_NOTE_TEMPLATE_PATH}: {e}. Creating empty.")
         else:
-            print(f"Warning: Template not found or invalid: {DAILY_NOTE_TEMPLATE_PATH}. Creating empty.")
+            logger.warning(f"Template not found or invalid: {DAILY_NOTE_TEMPLATE_PATH}. Creating empty.")
 
     try:
         # create_note raises InvalidPathError, NoteCreationError, MetadataError, VaultError
@@ -166,53 +171,3 @@ def append_to_daily_note(content_to_append, target_date=None, backup=True):
 
 
 # --- Add other daily note functions below ---
-
-# Example usage (for testing)
-if __name__ == '__main__':
-    today_path = get_daily_note_path()
-    print(f"Path for today's note: {today_path}")
-
-    specific_date = datetime.date(2024, 1, 15)
-    specific_path = get_daily_note_path(specific_date)
-    print(f"Path for {specific_date}: {specific_path}")
-
-    # Example for creating today's note
-    print("\nAttempting to create today's daily note...")
-    created_path = create_daily_note()
-    if created_path:
-        print(f"Ensured daily note exists at: {created_path}")
-        # Clean up the created note (optional)
-        # note_to_delete = os.path.join(VAULT_PATH, created_path)
-        # if os.path.exists(note_to_delete):
-        #     os.remove(note_to_delete)
-        #     print(f"Cleaned up: {created_path}")
-    else:
-        print("Failed to create or find today's note.")
-
-    # Example for appending to today's note
-    print("\nAttempting to append to today's daily note...")
-    append_content = "\n- Appended item at " + datetime.datetime.now().strftime("%H:%M")
-    if append_to_daily_note(append_content):
-        print("Successfully appended to today's note.")
-        # Verify (optional)
-        # today_note_path = get_daily_note_path()
-        # if today_note_path:
-        #     with open(os.path.join(VAULT_PATH, today_note_path), 'r', encoding='utf-8') as f:
-        #         print("\nContent after append:\n", f.read())
-        # Clean up note created/appended during tests
-        today_note_full_path = os.path.join(VAULT_PATH, get_daily_note_path())
-        if os.path.exists(today_note_full_path):
-             os.remove(today_note_full_path)
-             print(f"Cleaned up test daily note: {get_daily_note_path()}")
-    else:
-        print("Failed to append to today's note.")
-
-    # Final backup cleanup (ensure it runs after all tests)
-    # This might be better placed in vault_writer.py's __main__ if running tests together
-    backup_path = os.path.join(VAULT_PATH, ".vault_backups") # Use constant if defined elsewhere
-    if os.path.isdir(backup_path):
-        try:
-            shutil.rmtree(backup_path)
-            print(f"Final cleanup: Removed backup directory: {backup_path}")
-        except Exception as e:
-            print(f"Error during final backup cleanup: {e}") 

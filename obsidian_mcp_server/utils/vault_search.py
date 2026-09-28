@@ -1,10 +1,12 @@
 import os
+import logging
 import yaml # Needed for metadata search
 from obsidian_mcp_server.config import settings
 from obsidian_mcp_server.utils.exceptions import VaultError # Only need base VaultError here
+from obsidian_mcp_server.utils.frontmatter import split_frontmatter
+from obsidian_mcp_server.utils.paths import iter_vault_notes, vault_root
 
-# Use config settings
-VAULT_PATH = settings.obsidian_vault_path
+logger = logging.getLogger(__name__)
 
 def search_notes_content(query):
     """Searches the content of all markdown notes for a query string.
@@ -18,24 +20,16 @@ def search_notes_content(query):
     matches = []
     query_lower = query.lower()
     try:
-        for root, dirs, files in os.walk(VAULT_PATH):
-            # Optional: Skip hidden directories like .obsidian, .trash, .vault_backups
-            dirs[:] = [d for d in dirs if not d.startswith('.')]
-
-            for filename in files:
-                if filename.lower().endswith('.md'):
-                    full_path = os.path.join(root, filename)
-                    relative_path = os.path.relpath(full_path, VAULT_PATH).replace('\\', '/')
-
-                    try:
-                        with open(full_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                        if query_lower in content.lower():
-                            matches.append(relative_path)
-                    except Exception as e:
-                        # Log non-critical read errors during search, but continue
-                        print(f"Warning [Search]: Error reading {relative_path}: {e}")
-                        continue
+        for relative_path, full_path in iter_vault_notes():
+            try:
+                with open(full_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                if query_lower in content.lower():
+                    matches.append(relative_path)
+            except Exception as e:
+                # Log non-critical read errors during search, but continue
+                logger.warning(f"[Search] Error reading {relative_path}: {e}")
+                continue
 
         return matches
 
@@ -55,42 +49,22 @@ def search_notes_metadata(query):
     matches = []
     query_lower = query.lower()
     try:
-        for root, dirs, files in os.walk(VAULT_PATH):
-            dirs[:] = [d for d in dirs if not d.startswith('.')]
+        for relative_path, full_path in iter_vault_notes():
+            try:
+                with open(full_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            except Exception as e_read:
+                logger.warning(f"[MetaSearch] Error reading {relative_path}: {e_read}")
+                continue
 
-            for filename in files:
-                if filename.lower().endswith('.md'):
-                    full_path = os.path.join(root, filename)
-                    relative_path = os.path.relpath(full_path, VAULT_PATH).replace('\\', '/')
-
-                    try:
-                        with open(full_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-
-                        if not content.startswith("---"):
-                            continue # No frontmatter
-
-                        parts = content.split("---", 2)
-                        if len(parts) < 3:
-                            continue # Malformed frontmatter
-
-                        frontmatter_yaml = parts[1]
-                        try:
-                            metadata = yaml.safe_load(frontmatter_yaml)
-                            if isinstance(metadata, dict):
-                                # Recursively check values in the metadata dict/list structure
-                                if _check_metadata_values(metadata, query_lower):
-                                     matches.append(relative_path)
-                        except yaml.YAMLError:
-                            # Ignore notes with invalid YAML for this search
-                            continue
-                        except Exception as e_parse:
-                            print(f"Warning [MetaSearch]: Error parsing metadata for {relative_path}: {e_parse}")
-                            continue
-
-                    except Exception as e_read:
-                        print(f"Warning [MetaSearch]: Error reading {relative_path}: {e_read}")
-                        continue
+            try:
+                metadata, _, _ = split_frontmatter(content)
+            except yaml.YAMLError:
+                # Ignore notes with invalid YAML for this search
+                continue
+            # Recursively check values in the metadata dict/list structure
+            if metadata and _check_metadata_values(metadata, query_lower):
+                matches.append(relative_path)
 
         return matches
 
@@ -128,15 +102,16 @@ def search_folders(query):
     matches = []
     query_lower = query.lower()
     try:
-        for root, dirs, files in os.walk(VAULT_PATH):
+        vault = vault_root()
+        for root, dirs, files in os.walk(vault):
             # Modify dirs in place to control the walk
-            # Keep only directories not starting with '.' for further traversal
-            dirs[:] = [d for d in dirs if not d.startswith('.')]
+            # Skip hidden directories and the backup directory
+            dirs[:] = [d for d in dirs if not d.startswith('.') and d != settings.backup_dir_name]
 
             for dirname in dirs:
                 if query_lower in dirname.lower():
                     full_path = os.path.join(root, dirname)
-                    relative_path = os.path.relpath(full_path, VAULT_PATH).replace('\\', '/')
+                    relative_path = os.path.relpath(full_path, vault).replace('\\', '/')
                     matches.append(relative_path)
 
         # We only need to check the directories found during the walk
@@ -147,35 +122,3 @@ def search_folders(query):
 
 
 # --- Add other search functions below ---
-
-# Example usage (for testing)
-if __name__ == '__main__':
-    search_term = "test" # Replace with a term likely in your vault
-    print(f"Searching for notes containing '{search_term}':")
-    results = search_notes_content(search_term)
-    if results:
-        print("Found matches:")
-        for note in results:
-            print(f"  - {note}")
-    else:
-        print("No matching notes found.")
-
-    meta_search_term = "draft" # Replace with a term likely in your metadata
-    print(f"\nSearching for notes with metadata containing '{meta_search_term}':")
-    meta_results = search_notes_metadata(meta_search_term)
-    if meta_results:
-        print("Found matches in metadata:")
-        for note in meta_results:
-            print(f"  - {note}")
-    else:
-        print("No matching notes found in metadata.")
-
-    folder_search_term = "Folder" # Replace with part of a folder name in your vault
-    print(f"\nSearching for folders containing '{folder_search_term}':")
-    folder_results = search_folders(folder_search_term)
-    if folder_results:
-        print("Found matching folders:")
-        for folder in folder_results:
-            print(f"  - {folder}")
-    else:
-        print("No matching folders found.") 

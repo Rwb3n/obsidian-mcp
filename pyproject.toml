@@ -10,7 +10,7 @@ authors = [
 ]
 description = "An MCP server exposing tools to interact with an Obsidian vault."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
 ]
 dependencies = [
-    "mcp",
+    "mcp>=1.9,<2", # 2.x removed mcp.server.fastmcp
     "pydantic-settings",
     "python-dotenv",
     "pyyaml",
@@ -29,10 +29,19 @@ dependencies = [
     "h11>=0.16.0"
 ]
 
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+obsidian-mcp-server = "obsidian_mcp_server.main:main"
+
+[tool.setuptools]
+packages = ["obsidian_mcp_server", "obsidian_mcp_server.utils"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [project.urls]
 "Homepage" = "https://github.com/Rwb3n/obsidian-mcp" 
 "Bug Tracker" = "https://github.com/Rwb3n/obsidian-mcp/issues" 
 
-# Optional: Define entry point if you want a command-line script
-# [project.scripts]
-# obsidian-mcp-server = "obsidian_mcp_server.__main__:main" # Example, requires creating __main__.py 
