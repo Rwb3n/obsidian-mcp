@@ -6,6 +6,7 @@ import re # Import regular expressions
 from obsidian_mcp_server.config import settings
 from obsidian_mcp_server.utils.vault_writer import create_note, append_to_note # VAULT_PATH no longer needed from here
 from obsidian_mcp_server.utils.exceptions import VaultError, NoteNotFoundError, InvalidPathError, NoteCreationError, MetadataError, BackupError
+from obsidian_mcp_server.utils.path_utils import is_path_within_vault
 
 # Use config settings
 VAULT_PATH = settings.obsidian_vault_path
@@ -106,7 +107,7 @@ def create_daily_note(target_date=None, force_create=False):
     content = ""
     if DAILY_NOTE_TEMPLATE_PATH:
         template_full_path = os.path.join(VAULT_PATH, DAILY_NOTE_TEMPLATE_PATH)
-        if os.path.abspath(template_full_path).startswith(os.path.abspath(VAULT_PATH)) and os.path.isfile(template_full_path):
+        if is_path_within_vault(template_full_path, VAULT_PATH) and os.path.isfile(template_full_path):
             try:
                 with open(template_full_path, 'r', encoding='utf-8') as f:
                     content = f.read()

@@ -4,6 +4,7 @@ import re # Added for link/tag parsing
 # Import config and exceptions
 from obsidian_mcp_server.config import settings
 from obsidian_mcp_server.utils.exceptions import VaultError, NoteNotFoundError, InvalidPathError, MetadataError
+from obsidian_mcp_server.utils.path_utils import is_path_within_vault
 
 # Use vault path from settings
 VAULT_PATH = settings.obsidian_vault_path
@@ -19,7 +20,7 @@ def list_folders(relative_path="."):
     """
     base_path = os.path.join(VAULT_PATH, relative_path)
     # Security check (ensure it's within VAULT_PATH after joining)
-    if not os.path.abspath(base_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(base_path, VAULT_PATH):
         raise InvalidPathError(f"Attempted access outside vault: {relative_path}")
     if not os.path.isdir(base_path):
         raise InvalidPathError(f"Directory not found or invalid: {relative_path}")
@@ -41,7 +42,7 @@ def list_notes(relative_path="."):
         A list of note filenames (including .md extension). Returns None if path invalid.
     """
     base_path = os.path.join(VAULT_PATH, relative_path)
-    if not os.path.abspath(base_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(base_path, VAULT_PATH):
         raise InvalidPathError(f"Attempted access outside vault: {relative_path}")
     if not os.path.isdir(base_path):
         raise InvalidPathError(f"Directory not found or invalid: {relative_path}")
@@ -65,7 +66,7 @@ def get_note_content(note_path):
         cannot be found or read.
     """
     full_path = os.path.join(VAULT_PATH, note_path)
-    if not os.path.abspath(full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(full_path, VAULT_PATH):
         raise InvalidPathError(f"Attempted access outside vault: {note_path}")
 
     try:
@@ -88,7 +89,7 @@ def get_note_metadata(note_path):
         if no frontmatter exists or there's an error.
     """
     full_path = os.path.join(VAULT_PATH, note_path)
-    if not os.path.abspath(full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(full_path, VAULT_PATH):
         raise InvalidPathError(f"Attempted access outside vault: {note_path}")
 
     try:
@@ -225,7 +226,7 @@ def get_backlinks(target_note_path: str) -> list[str]:
     
     # 1. Check if the target note itself exists (optional, but good practice)
     target_full_path = os.path.join(VAULT_PATH, target_note_path)
-    if not os.path.abspath(target_full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(target_full_path, VAULT_PATH):
         raise InvalidPathError(f"[Backlinks] Target path outside vault: {target_note_path}")
     if not os.path.isfile(target_full_path):
         raise NoteNotFoundError(f"[Backlinks] Target note not found: {target_note_path}")

@@ -6,6 +6,7 @@ import logging # Import logging
 # Import config and exceptions
 from obsidian_mcp_server.config import settings
 from obsidian_mcp_server.utils.exceptions import VaultError, NoteNotFoundError, InvalidPathError, MetadataError, BackupError, NoteCreationError
+from obsidian_mcp_server.utils.path_utils import is_path_within_vault
 from obsidian_mcp_server.utils.vault_reader import get_note_content
 
 logger = logging.getLogger(__name__) # Get logger for this module
@@ -28,7 +29,7 @@ def _create_backup(relative_note_path):
     """
     source_full_path = os.path.join(VAULT_PATH, relative_note_path)
 
-    if not os.path.abspath(source_full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(source_full_path, VAULT_PATH):
         raise InvalidPathError(f"[Backup] Attempted access outside vault: {relative_note_path}")
     if not os.path.isfile(source_full_path):
         # Don't raise NoteNotFoundError here? Maybe backup shouldn't fail if note gone.
@@ -70,7 +71,7 @@ def create_note(relative_note_path, content="", metadata=None):
     """
     full_path = os.path.join(VAULT_PATH, relative_note_path)
 
-    if not os.path.abspath(full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(full_path, VAULT_PATH):
         raise InvalidPathError(f"[Create] Attempted access outside vault: {relative_note_path}")
     if os.path.exists(full_path):
         raise NoteCreationError(f"[Create] File already exists: {relative_note_path}")
@@ -120,7 +121,7 @@ def edit_note(relative_note_path, new_content, backup=True):
     """
     full_path = os.path.join(VAULT_PATH, relative_note_path)
 
-    if not os.path.abspath(full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(full_path, VAULT_PATH):
         raise InvalidPathError(f"[Edit] Attempted access outside vault: {relative_note_path}")
     if not os.path.isfile(full_path):
         raise NoteNotFoundError(f"[Edit] File does not exist: {relative_note_path}")
@@ -158,7 +159,7 @@ def append_to_note(relative_note_path, content_to_append, backup=True):
     """
     full_path = os.path.join(VAULT_PATH, relative_note_path)
 
-    if not os.path.abspath(full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(full_path, VAULT_PATH):
         raise InvalidPathError(f"[Append] Attempted access outside vault: {relative_note_path}")
     if not os.path.isfile(full_path):
         raise NoteNotFoundError(f"[Append] File does not exist: {relative_note_path}")
@@ -207,7 +208,7 @@ def update_metadata(relative_note_path, metadata_updates, backup=True):
         VaultError: For other vault access issues.
     """
     full_path = os.path.join(VAULT_PATH, relative_note_path)
-    if not os.path.abspath(full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(full_path, VAULT_PATH):
         raise InvalidPathError(f"[Meta] Attempted access outside vault: {relative_note_path}")
     # Check existence early - Reading below will fail anyway, but this is clearer.
     if not os.path.isfile(full_path):
@@ -302,7 +303,7 @@ def delete_note(relative_note_path: str, backup: bool = True) -> bool:
     full_path = os.path.join(VAULT_PATH, relative_note_path)
 
     # 1. Path Validation
-    if not os.path.abspath(full_path).startswith(os.path.abspath(VAULT_PATH)):
+    if not is_path_within_vault(full_path, VAULT_PATH):
         raise InvalidPathError(f"[Delete] Attempted access outside vault: {relative_note_path}")
 
     # 2. Check Existence

@@ -3,6 +3,7 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+from obsidian_mcp_server.utils.path_utils import is_path_within_vault
 
 class Settings(BaseSettings):
     """Defines application settings, loadable from env vars or .env file."""
@@ -47,7 +48,7 @@ settings.obsidian_vault_path = os.path.abspath(settings.obsidian_vault_path)
 if settings.daily_note_location not in ["/", "."] and not os.path.isdir(os.path.join(settings.obsidian_vault_path, settings.daily_note_location)):
     # Check if it's a *potential* directory within the vault, even if it doesn't exist yet
     potential_path = os.path.abspath(os.path.join(settings.obsidian_vault_path, settings.daily_note_location))
-    if not potential_path.startswith(settings.obsidian_vault_path):
+    if not is_path_within_vault(potential_path, settings.obsidian_vault_path):
          print(f"Warning: Daily note location '{settings.daily_note_location}' seems invalid or outside vault. Defaulting to root.")
          settings.daily_note_location = "/"
     # Else: Assume it's a valid relative path that might be created later #
